@@ -51,7 +51,7 @@ export default async function middleware(req) {
   if (base64Data !== KUNCI_RAHASIA_BASE64) {
     console.log(`❌ REJECTED: WRONG KEY | IP=${ip} | DATA=${base64Data}`);
     // Redirect ke domain utama jika kunci salah (agar bot tersesat)
-    return Response.redirect('https://gate.centralzero.mx/', 302);
+    return Response.redirect('https://vercel.com/', 302);
   }
 
   // 7. SUCCESS REDIRECT & LOG
