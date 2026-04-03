@@ -15,5 +15,5 @@ export default function middleware(req) {
   }
 
   // 2. Jika Manusia, Redirect Instan
-  return Response.redirect('https://nusaindahrp.com/?dev', 307);
+  return Response.redirect('https://debounce.com', 307);
 }
